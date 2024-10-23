@@ -11,7 +11,7 @@ import (
 
 type KafkaProducer struct {
 	producer *kafka.Producer
-}
+}		
 
 
 type PaymentEvent struct {
@@ -40,7 +40,7 @@ func (kp *KafkaProducer) ProducePaymentEvent(topic string, event PaymentEvent) e
 	deliveryChan := make(chan kafka.Event)
 	err = kp.producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-		Value:          message, // Send serialized JSON message
+		Value:          message, 
 	}, deliveryChan)
 
 	if err != nil {
