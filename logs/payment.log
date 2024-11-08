@@ -1,0 +1,14 @@
+{"Function":"GetTotalRevenue","Param":"day","level":"info","msg":"Fetching total revenue","time":"2024-11-06T12:42:55+05:30"}
+{"error":"sql: Scan error on column index 0, name \"sum\": converting NULL to float64 is unsupported","level":"error","msg":"Failed to fetch total revenue","time":"2024-11-06T12:42:55+05:30"}
+{"Function":"GetTotalRevenue","Param":"week","level":"info","msg":"Fetching total revenue","time":"2024-11-06T12:43:18+05:30"}
+{"TotalRevenue":600,"level":"info","msg":"Total revenue fetched successfully","time":"2024-11-06T12:43:18+05:30"}
+{"Function":"GetTotalRevenue","Param":"month","level":"info","msg":"Fetching total revenue","time":"2024-11-06T12:43:20+05:30"}
+{"TotalRevenue":1600,"level":"info","msg":"Total revenue fetched successfully","time":"2024-11-06T12:43:20+05:30"}
+{"Function":"GetTotalRevenue","Param":"week","level":"info","msg":"Fetching total revenue","time":"2024-11-06T12:55:05+05:30"}
+{"TotalRevenue":600,"level":"info","msg":"Total revenue fetched successfully","time":"2024-11-06T12:55:05+05:30"}
+{"Function":"GetTotalRevenue","Param":"year","level":"info","msg":"Fetching total revenue","time":"2024-11-06T12:55:07+05:30"}
+{"TotalRevenue":9800,"level":"info","msg":"Total revenue fetched successfully","time":"2024-11-06T12:55:07+05:30"}
+{"Function":"GetTotalRevenue","Param":"day","level":"info","msg":"Fetching total revenue","time":"2024-11-06T13:52:36+05:30"}
+{"error":"sql: Scan error on column index 0, name \"sum\": converting NULL to float64 is unsupported","level":"error","msg":"Failed to fetch total revenue","time":"2024-11-06T13:52:36+05:30"}
+{"Function":"GetTotalRevenue","Param":"week","level":"info","msg":"Fetching total revenue","time":"2024-11-06T13:52:37+05:30"}
+{"TotalRevenue":600,"level":"info","msg":"Total revenue fetched successfully","time":"2024-11-06T13:52:37+05:30"}
