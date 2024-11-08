@@ -11,6 +11,7 @@ type PaymentRepository interface {
 	CreatePayment(payment *domain.Payment) error
 	GetPaymentByID(paymentID string) (*domain.Payment, error)
 	UpdatePaymentStatus(payment domain.Payment) error
+	GetTotalRevenue(param string) (float64, error)
 }
 
 type paymentRepository struct {
@@ -42,4 +43,27 @@ func (r *paymentRepository) UpdatePaymentStatus(payment domain.Payment) error {
 	}
 	log.Println("payment details updated")
 	return nil
+}
+func (r *paymentRepository) GetTotalRevenue(param string) (float64, error) {
+	var totalRevenue float64
+
+	// Build the base query with SUM(amount) and add filters
+	query := r.db.Model(&domain.Payment{}).Select("SUM(amount)")
+
+	// Apply filter based on the 'param' argument
+	switch param {
+	case "day":
+		query = query.Where("DATE_TRUNC('day', created_at) = DATE_TRUNC('day', CURRENT_TIMESTAMP)")
+	case "week":
+		query = query.Where("DATE_TRUNC('week', created_at) = DATE_TRUNC('week', CURRENT_TIMESTAMP)")
+	case "month":
+		query = query.Where("DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_TIMESTAMP)")
+	}
+
+	// Use Scan to get the result of SUM(amount)
+	if err := query.Scan(&totalRevenue).Error; err != nil {
+		return 0, err
+	}
+
+	return totalRevenue, nil
 }

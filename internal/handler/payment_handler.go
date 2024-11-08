@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	paymentpb "github.com/NUHMANUDHEENT/hosp-connect-pb/proto/payment"
@@ -25,9 +26,9 @@ func NewPaymentHandler(service service.PaymentService) *PaymentServiceClient {
 func (h *PaymentServiceClient) CreateRazorOrderId(ctx context.Context, req *paymentpb.CreateRazorOrderIdRequest) (*paymentpb.CreateRazorOrderIdResponse, error) {
 	log.Println("request with", req.PatientId)
 	res, paymenturl, err := h.paymentService.CreateRozorOrderId(domain.Payment{
-		PatientID:        req.PatientId,
-		Amount:           req.Amount,
-		Type:             req.Type,
+		PatientID: req.PatientId,
+		Amount:    req.Amount,
+		Type:      req.Type,
 	})
 	if err != nil {
 		return &paymentpb.CreateRazorOrderIdResponse{
@@ -42,7 +43,7 @@ func (h *PaymentServiceClient) CreateRazorOrderId(ctx context.Context, req *paym
 		Status:     "success",
 		StatusCode: 200,
 		PaymentUrl: paymenturl,
-		OrderId : res,
+		OrderId:    res,
 	}, nil
 }
 func (h *PaymentServiceClient) PaymentCallback(ctx context.Context, req *paymentpb.PaymentCallBackRequest) (*paymentpb.PaymentCallBackResponse, error) {
@@ -63,11 +64,19 @@ func (h *PaymentServiceClient) PaymentCallback(ctx context.Context, req *payment
 			Success: false,
 		}, nil
 	}
-	
 
 	// Successful processing
 	return &paymentpb.PaymentCallBackResponse{
 		Message: "Payment processed successfully",
 		Success: true,
+	}, nil
+}
+func (h *PaymentServiceClient) GetTotalRevenue(ctx context.Context, req *paymentpb.GetTotalRevenueRequest) (*paymentpb.GetTotalRevenueResponse, error) {
+	revenue, err := h.paymentService.GetTotalRevenue(req.Param)
+	if err != nil {
+		return &paymentpb.GetTotalRevenueResponse{}, errors.New("failed to get total revenue")
+	}
+	return &paymentpb.GetTotalRevenueResponse{
+		TotalRevenue: revenue,
 	}, nil
 }

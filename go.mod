@@ -3,11 +3,13 @@ module github.com/nuhmanudheent/hosp-connect-payment-service
 go 1.22.2
 
 require (
-	github.com/NUHMANUDHEENT/hosp-connect-pb v0.0.0-20241008153841-b96b18a4fe9e
+	github.com/NUHMANUDHEENT/hosp-connect-pb v0.0.0-20241030101110-3238dc03febb
 	github.com/confluentinc/confluent-kafka-go v1.9.2
 	github.com/joho/godotenv v1.5.1
 	github.com/razorpay/razorpay-go v1.3.2
+	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/grpc v1.67.1
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.12
 )
@@ -25,6 +27,6 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241007155032-5fefd90f89a9 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 )

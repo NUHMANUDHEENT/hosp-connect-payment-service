@@ -8,9 +8,8 @@ import (
 )
 
 func RazorClientSetUp() *razorpay.Client {
-	// Initialize Razorpay client
-	razorpayKeyID := os.Getenv("RAZORPAY_KEY_ID")    
-	razorpayKeySecret := os.Getenv("RAZORPAY_KEY_SECRET") 
+	razorpayKeyID := os.Getenv("RAZORPAY_KEY_ID")
+	razorpayKeySecret := os.Getenv("RAZORPAY_KEY_SECRET")
 
 	if razorpayKeyID == "" || razorpayKeySecret == "" {
 		log.Fatalf("Razorpay credentials not set")

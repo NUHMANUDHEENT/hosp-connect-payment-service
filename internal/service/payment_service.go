@@ -3,36 +3,47 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log"
 
+	appointmentpb "github.com/NUHMANUDHEENT/hosp-connect-pb/proto/appointment"
 	patientpb "github.com/NUHMANUDHEENT/hosp-connect-pb/proto/patient"
-	"github.com/nuhmanudheent/hosp-connect-payment-service/internal/config"
 	"github.com/nuhmanudheent/hosp-connect-payment-service/internal/domain"
 	"github.com/nuhmanudheent/hosp-connect-payment-service/internal/repository"
+	"github.com/nuhmanudheent/hosp-connect-payment-service/internal/utils"
 	"github.com/razorpay/razorpay-go"
+	"github.com/sirupsen/logrus"
 )
 
 type PaymentService interface {
 	// CreateAppointmentFeePayment(ctx context.Context, req *payment.CreateAppointmentFeePaymentRequest) (*payment.CreateAppointmentFeePaymentResponse, error)
 	CreateRozorOrderId(reqData domain.Payment) (string, string, error)
 	ProcessPayment(payment domain.Payment) error
+	GetTotalRevenue(param string) (float64, error)
 }
 
 type paymentService struct {
-	repo           repository.PaymentRepository
-	razorpayClient *razorpay.Client
-	PatientClient  patientpb.PatientServiceClient
+	repo              repository.PaymentRepository
+	razorpayClient    *razorpay.Client
+	PatientClient     patientpb.PatientServiceClient
+	AppointmentClient appointmentpb.AppointmentServiceClient
+	Logger            *logrus.Logger
 }
 
-func NewPaymentService(repo repository.PaymentRepository, razorpayClient *razorpay.Client, patientClient patientpb.PatientServiceClient) PaymentService {
+func NewPaymentService(repo repository.PaymentRepository, razorpayClient *razorpay.Client, patientClient patientpb.PatientServiceClient, appointmentClient appointmentpb.AppointmentServiceClient, logger *logrus.Logger) PaymentService {
 	return &paymentService{
-		repo:           repo,
-		razorpayClient: razorpayClient,
-		PatientClient:  patientClient,
+		repo:              repo,
+		razorpayClient:    razorpayClient,
+		PatientClient:     patientClient,
+		AppointmentClient: appointmentClient,
+		Logger:            logger,
 	}
 }
 func (p *paymentService) CreateRozorOrderId(reqData domain.Payment) (string, string, error) {
+	p.Logger.WithFields(logrus.Fields{
+		"Function":  "CreateRozorOrderId",
+		"PatientID": reqData.PatientID,
+		"Amount":    reqData.Amount,
+	}).Info("Initiating Razorpay order creation")
+
 	orderParams := map[string]interface{}{
 		"amount":   reqData.Amount * 100,
 		"currency": "INR",
@@ -41,9 +52,10 @@ func (p *paymentService) CreateRozorOrderId(reqData domain.Payment) (string, str
 			"patientId": reqData.PatientID, // Add patientId to notes
 		},
 	}
+
 	order, err := p.razorpayClient.Order.Create(orderParams, nil)
 	if err != nil {
-		log.Println("Order id creation failed ==", err)
+		p.Logger.WithError(err).Error("Failed to create Razorpay order")
 		return "", "", errors.New("payment not initiated : " + err.Error())
 	}
 	razorId, _ := order["id"].(string)
@@ -51,92 +63,81 @@ func (p *paymentService) CreateRozorOrderId(reqData domain.Payment) (string, str
 
 	reqData.OrderID = razorId
 	if err := p.repo.CreatePayment(&reqData); err != nil {
+		p.Logger.WithError(err).Error("Failed to store payment data")
 		return "Failed to store payment data", "", err
 	}
 
+	p.Logger.WithFields(logrus.Fields{
+		"OrderID": razorId,
+		"URL":     paymentUrl,
+	}).Info("Razorpay order created successfully")
 	return razorId, paymentUrl, nil
-
 }
 
 func (s *paymentService) ProcessPayment(payment domain.Payment) error {
-	// if err := RazorPaymentVerification(signature, orderID, paymentID); err != nil {
-	// 	log.Println("Payment failed : Payment Signature not valid")
-	// 	return err
-	// }
+	s.Logger.WithFields(logrus.Fields{
+		"Function": "ProcessPayment",
+		"OrderID":  payment.OrderID,
+		"Status":   payment.Status,
+	}).Info("Processing payment")
+
 	err := s.repo.UpdatePaymentStatus(payment)
 	if err != nil {
-		log.Printf("Error updating payment status: %v", err)
+		s.Logger.WithError(err).Error("Error updating payment status")
 		return err
 	}
-	fmt.Println("patient_id", payment.PatientID)
+
 	resp, err := s.PatientClient.GetProfile(context.Background(), &patientpb.GetProfileRequest{
 		PatientId: payment.PatientID,
 	})
 	if err != nil {
-		log.Println("Failed to get patient profile")
+		s.Logger.WithError(err).Error("Failed to fetch patient profile")
 		return err
 	}
-	fmt.Println("email==", resp.Email)
+
+	s.Logger.WithFields(logrus.Fields{
+		"Email": resp.Email,
+	}).Info("Fetched patient profile for payment notification")
+
 	if payment.Status == "captured" {
-		err = config.HandlePaymentCompletion(payment.OrderID, payment.PatientID, resp.Email, payment.Amount)
+		s.Logger.Info("Payment captured, fetching appointment details")
+
+		appointment, err := s.AppointmentClient.GetAppointmentDetails(context.Background(), &appointmentpb.GetAppointmentDetailsRequest{
+			OrderId: payment.OrderID,
+		})
 		if err != nil {
+			s.Logger.WithError(err).Error("Failed to fetch appointment details")
+			return err
+		}
+
+		err = utils.HandleAppointmentNotification(payment.OrderID, payment.PatientID, resp.Email, payment.Amount, appointment.AppointmentTime.AsTime())
+		if err != nil {
+			s.Logger.WithError(err).Error("Failed to send payment notification")
 			return err
 		}
 	}
-	log.Printf("Payment processed successfully for OrderID: %s", payment.OrderID)
+
+	s.Logger.WithFields(logrus.Fields{
+		"OrderID": payment.OrderID,
+		"Status":  payment.Status,
+	}).Info("Payment processed successfully")
 	return nil
 }
 
-// func RazorPaymentVerification(sign, orderId, paymentId string) error {
-// 	signature := sign
-// 	secret := os.Getenv("RAZORPAY_KEY_SECRET")
-// 	data := orderId + "|" + paymentId
-// 	h := hmac.New(sha256.New, []byte(secret))
-// 	_, err := h.Write([]byte(data))
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	sha := hex.EncodeToString(h.Sum(nil))
-// 	if subtle.ConstantTimeCompare([]byte(sha), []byte(signature)) != 1 {
-// 		return errors.New("payment signature not valid")
-// 	} else {
-// 		return nil
-// 	}
-// }
+func (s *paymentService) GetTotalRevenue(param string) (float64, error) {
+	s.Logger.WithFields(logrus.Fields{
+		"Function": "GetTotalRevenue",
+		"Param":    param,
+	}).Info("Fetching total revenue")
 
-// func (s *paymentService) PaymentCallBack(ctx context.Context, req *payment.CreateAppointmentFeePaymentRequest) (*payment.CreateAppointmentFeePaymentResponse, error) {
-// 	// Create Razorpay order
-// 	orderData := map[string]interface{}{
-// 		"amount":   int(req.Amount * 100), // amount in paise
-// 		"currency": "INR",
-// 		"receipt":  fmt.Sprintf("receipt_%s", req.PatientId),
-// 	}
+	revenue, err := s.repo.GetTotalRevenue(param)
+	if err != nil {
+		s.Logger.WithError(err).Error("Failed to fetch total revenue")
+		return 0, err
+	}
 
-// 	order, err := s.razorpayClient.Order.Create(orderData, nil)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to create Razorpay order: %v", err)
-// 	}
-
-// 	// Create payment record in database
-// 	paymentRecord := &domain.Payment{
-// 		PatientID:        req.PatientId,
-// 		SpecializationID: req.SpecializationId,
-// 		Amount:           req.Amount,
-// 		Status:           "pending",
-// 		PaymentID:        "", // Will be updated upon successful payment
-// 		OrderID:          order["id"].(string),
-// 		Type:             req.Type,
-// 	}
-
-// 	if err := s.repo.CreatePayment(paymentRecord); err != nil {
-// 		return nil, fmt.Errorf("failed to create payment record: %v", err)
-// 	}
-
-// 	// Return response with order ID
-// 	return &payment.CreateAppointmentFeePaymentResponse{
-// 		PaymentId:  paymentRecord.PaymentID,
-// 		Status:     paymentRecord.Status,
-// 		Message:    "Order created successfully",
-// 		PaymentUrl: paymentRecord.OrderID,
-// 	}, nil
-// }
+	s.Logger.WithFields(logrus.Fields{
+		"TotalRevenue": revenue,
+	}).Info("Total revenue fetched successfully")
+	return revenue, nil
+}
