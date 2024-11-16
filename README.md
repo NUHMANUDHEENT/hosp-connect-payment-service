@@ -30,5 +30,5 @@ The **Payment Service** manages payment processing for appointments and treatmen
 
 ### Clone the Repository
 ```bash
-git clone https://github.com/your-username/payment-service.git
+git clone https://github.com/NUHMANUDHEENT/hosp-connect-payment-service.git
 cd payment-service
