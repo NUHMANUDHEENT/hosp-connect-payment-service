@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"net"
+	"os"
 
 	appointmentpb "github.com/NUHMANUDHEENT/hosp-connect-pb/proto/appointment"
 	patientpb "github.com/NUHMANUDHEENT/hosp-connect-pb/proto/patient"
@@ -28,11 +29,11 @@ func GRPCSetup(port string, razorpayClient *razorpay.Client) (net.Listener, *grp
 	logger := logs.NewLogger()
 	paymentRepo := repository.NewPaymentRepository(db)
 
-	patientConn, err := grpc.NewClient("localhost:50051", grpc.WithInsecure())
+	patientConn, err := grpc.NewClient(os.Getenv("USER_GRPC_SERVER"), grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to patient service: %v", err)
 	}
-	appointmentConn, err := grpc.NewClient("localhost:50052", grpc.WithInsecure())
+	appointmentConn, err := grpc.NewClient(os.Getenv("APPT_GRPC_SERVER"), grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to appointment service: %v", err)
 	}
