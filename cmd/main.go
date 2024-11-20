@@ -17,7 +17,6 @@ func main() {
 	}
 	listener, server := config.GRPCSetup(port, di.RazorClientSetUp())
 
-	// Start the gRPC server
 	if err := server.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve gRPC server: %v", err)
 	}

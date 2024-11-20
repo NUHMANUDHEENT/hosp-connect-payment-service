@@ -22,7 +22,6 @@ type PaymentEvent struct {
 	Date      string  `json:"date"`
 }
 
-// NewKafkaProducer creates a new Kafka producer
 func NewKafkaProducer(broker string) (*KafkaProducer, error) {
 	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:      []string{broker},
@@ -55,14 +54,13 @@ func (kp *KafkaProducer) ProducePaymentEvent(event PaymentEvent) error {
 	return nil
 }
 
-// HandleAppointmentNotification handles payment and produces an event
+
 func HandleAppointmentNotification(paymentID, patientID, email string, amount float64, datetime time.Time) error {
 	kafkaProducer, err := NewKafkaProducer("localhost:9092")
 	if err != nil {
 		return fmt.Errorf("failed to create Kafka producer: %w", err)
 	}
 
-	// Create the payment event
 	paymentEvent := PaymentEvent{
 		PaymentID: paymentID,
 		PatientID: patientID,
@@ -71,7 +69,7 @@ func HandleAppointmentNotification(paymentID, patientID, email string, amount fl
 		Date:      time.Now().Format(time.RFC3339),
 	}
 
-	// Produce the payment event
+
 	err = kafkaProducer.ProducePaymentEvent(paymentEvent)
 	if err != nil {
 		return fmt.Errorf("failed to produce payment event: %w", err)

@@ -22,7 +22,7 @@ The **Payment Service** manages payment processing for appointments and treatmen
 - **Backend:** Go (Golang)
 - **Payment Gateway:** Razorpay
 - **Event Streaming:** Kafka
-- **Database:** PostgreSQL or MongoDB (as per setup)
+- **Database:** PostgreSQL
 
 ---
 
@@ -31,4 +31,4 @@ The **Payment Service** manages payment processing for appointments and treatmen
 ### Clone the Repository
 ```bash
 git clone https://github.com/NUHMANUDHEENT/hosp-connect-payment-service.git
-cd payment-service
+cd hosp-connect-payment-service

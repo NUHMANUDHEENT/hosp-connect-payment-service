@@ -8,9 +8,6 @@ import (
 	paymentpb "github.com/NUHMANUDHEENT/hosp-connect-pb/proto/payment"
 	"github.com/nuhmanudheent/hosp-connect-payment-service/internal/domain"
 	"github.com/nuhmanudheent/hosp-connect-payment-service/internal/service"
-	// "github.com/your_project/internal/service"
-	// "google.golang.org/grpc/codes"
-	// "google.golang.org/grpc/status"
 )
 
 type PaymentServiceClient struct {
@@ -55,7 +52,7 @@ func (h *PaymentServiceClient) PaymentCallback(ctx context.Context, req *payment
 		Status:    req.Status,
 		Amount:    req.Amount,
 	}
-	// Call the payment service to process and update the payment details
+
 	err := h.paymentService.ProcessPayment(payment)
 	if err != nil {
 		log.Printf("Error processing payment: %v", err)
@@ -65,7 +62,6 @@ func (h *PaymentServiceClient) PaymentCallback(ctx context.Context, req *payment
 		}, nil
 	}
 
-	// Successful processing
 	return &paymentpb.PaymentCallBackResponse{
 		Message: "Payment processed successfully",
 		Success: true,

@@ -15,4 +15,6 @@ WORKDIR /app
 
 COPY --from=builder /app/payment_service .
 
+COPY .env ./
+
 CMD ["./payment_service"]

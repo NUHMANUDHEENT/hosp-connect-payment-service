@@ -17,9 +17,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-// GRPCSetup initializes the gRPC server and registers the services
 func GRPCSetup(port string, razorpayClient *razorpay.Client) (net.Listener, *grpc.Server) {
-	// Create a TCP listener
 	listener, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("Failed to listen on port %s: %v", port, err)
@@ -39,19 +37,16 @@ func GRPCSetup(port string, razorpayClient *razorpay.Client) (net.Listener, *grp
 	}
 	patientClient := patientpb.NewPatientServiceClient(patientConn)
 	appointmentClient := appointmentpb.NewAppointmentServiceClient(appointmentConn)
-	// Initialize services
+
 	paymentService := service.NewPaymentService(paymentRepo, razorpayClient, patientClient, appointmentClient, logger)
 
-	// Initialize handlers
 	paymentHandler := handler.NewPaymentHandler(paymentService)
-
-	// Create a new gRPC server
+	
 	server := grpc.NewServer()
 
-	// Register the PaymentService with the gRPC server
 	payment.RegisterPaymentServiceServer(server, paymentHandler)
 
-	// Enable server reflection (optional, useful for testing with tools like grpcurl)
+
 	reflection.Register(server)
 	log.Printf("Payment gRPC service is running on port %s", port)
 	return listener, server

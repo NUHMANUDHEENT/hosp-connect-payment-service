@@ -49,7 +49,7 @@ func (p *paymentService) CreateRozorOrderId(reqData domain.Payment) (string, str
 		"currency": "INR",
 		"receipt":  reqData.PatientID,
 		"notes": map[string]interface{}{
-			"patientId": reqData.PatientID, // Add patientId to notes
+			"patientId": reqData.PatientID, 
 		},
 	}
 
