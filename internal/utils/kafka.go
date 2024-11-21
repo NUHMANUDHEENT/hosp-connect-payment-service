@@ -79,3 +79,33 @@ func HandleAppointmentNotification(paymentID, patientID, email string, amount fl
 	log.Println("Payment event produced successfully")
 	return nil
 }
+func EnsureTopicExists(broker, topic string) error {
+    conn, err := kafka.Dial("tcp", broker)
+    if err != nil {
+        return fmt.Errorf("failed to connect to Kafka broker: %w", err)
+    }
+    defer conn.Close()
+
+    topics, err := conn.ReadPartitions()
+    if err != nil {
+        return fmt.Errorf("failed to read partitions: %w", err)
+    }
+
+    for _, t := range topics {
+        if t.Topic == topic {
+            return nil
+        }
+    }
+
+    // Create the topic if it doesn't exist
+    err = conn.CreateTopics(kafka.TopicConfig{
+        Topic:             topic,
+        NumPartitions:     1,
+        ReplicationFactor: 1,
+    })
+    if err != nil {
+        return fmt.Errorf("failed to create topic: %w", err)
+    }
+
+    return nil
+}

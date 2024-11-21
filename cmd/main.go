@@ -16,7 +16,7 @@ func main() {
 	if port == "" {
 		log.Fatalf("PAYMENT_PORT not set")
 	}
-	utils.NewKafkaProducer(os.Getenv("KAFKA_BROKER"))
+	utils.EnsureTopicExists(os.Getenv("KAFKA_BROKER"),"payment_topic")
 	listener, server := config.GRPCSetup(port, di.RazorClientSetUp())
 
 	if err := server.Serve(listener); err != nil {
