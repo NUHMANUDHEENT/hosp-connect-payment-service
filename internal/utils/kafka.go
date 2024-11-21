@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -56,7 +57,7 @@ func (kp *KafkaProducer) ProducePaymentEvent(event PaymentEvent) error {
 
 
 func HandleAppointmentNotification(paymentID, patientID, email string, amount float64, datetime time.Time) error {
-	kafkaProducer, err := NewKafkaProducer("localhost:9092")
+	kafkaProducer, err := NewKafkaProducer(os.Getenv("KAFKA_BROKER"))
 	if err != nil {
 		return fmt.Errorf("failed to create Kafka producer: %w", err)
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/nuhmanudheent/hosp-connect-payment-service/internal/config"
 	"github.com/nuhmanudheent/hosp-connect-payment-service/internal/di"
+	"github.com/nuhmanudheent/hosp-connect-payment-service/internal/utils"
 )
 
 func main() {
@@ -15,6 +16,7 @@ func main() {
 	if port == "" {
 		log.Fatalf("PAYMENT_PORT not set")
 	}
+	utils.NewKafkaProducer(os.Getenv("KAFKA_BROKER"))
 	listener, server := config.GRPCSetup(port, di.RazorClientSetUp())
 
 	if err := server.Serve(listener); err != nil {
