@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 
 	appointmentpb "github.com/NUHMANUDHEENT/hosp-connect-pb/proto/appointment"
 	patientpb "github.com/NUHMANUDHEENT/hosp-connect-pb/proto/patient"
@@ -49,7 +51,7 @@ func (p *paymentService) CreateRozorOrderId(reqData domain.Payment) (string, str
 		"currency": "INR",
 		"receipt":  reqData.PatientID,
 		"notes": map[string]interface{}{
-			"patientId": reqData.PatientID, 
+			"patientId": reqData.PatientID,
 		},
 	}
 
@@ -59,7 +61,7 @@ func (p *paymentService) CreateRozorOrderId(reqData domain.Payment) (string, str
 		return "", "", errors.New("payment not initiated : " + err.Error())
 	}
 	razorId, _ := order["id"].(string)
-	paymentUrl := "http://localhost:8080/api/v1/payment?orderId=" + razorId
+	paymentUrl := fmt.Sprintf("http://%s/api/v1/payment?orderId=%s", os.Getenv("IP_ADDRESS"), razorId)
 
 	reqData.OrderID = razorId
 	if err := p.repo.CreatePayment(&reqData); err != nil {
